@@ -5,40 +5,15 @@
 <title>نظام النقاط</title>
 
 <style>
-body{
-  background:#020617;
-  color:white;
-  font-family:Arial;
-  padding:20px;
-}
-.card{
-  background:#1e293b;
-  padding:15px;
-  margin:10px 0;
-  border-radius:12px;
-}
-button{
-  padding:8px 12px;
-  margin:4px;
-  border:none;
-  border-radius:8px;
-  font-size:15px;
-  cursor:pointer;
-}
-.good{background:#22c55e;color:black;}
-.bad{background:#ef4444;color:black;}
-.score{
-  text-align:center;
-  font-size:28px;
-  color:#facc15;
-}
-input{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:none;
-}
-.hidden{display:none;}
+body{font-family:Arial;background:#0f172a;color:#fff;padding:20px}
+.card{background:#1e293b;margin:15px 0;padding:15px;border-radius:12px}
+button{background:#22c55e;border:none;color:black;padding:10px 15px;border-radius:10px;font-size:16px;cursor:pointer;margin:4px}
+.danger{background:#ef4444}
+.reward{background:#38bdf8}
+.logout{background:#ef4444;color:black;margin-top:10px}
+.score{font-size:32px;color:#facc15;text-align:center}
+.hidden{display:none}
+input{width:100%;padding:10px;border-radius:10px;border:none;margin:10px 0}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -47,31 +22,55 @@ input{
 
 <body>
 
-<div id="login" class="card">
-  <h3>تسجيل الدخول</h3>
-  <input id="user" placeholder="محمد الخير أو محمد عليان">
-  <button class="good" onclick="login()">دخول</button>
+<!-- صفحة تسجيل الدخول -->
+<div id="loginCard" class="card">
+  <h2>🔐 تسجيل الدخول</h2>
+  <input id="username" placeholder="محمد الخير أو محمد عليان">
+  <button onclick="login()">دخول</button>
 </div>
 
+<!-- التطبيق -->
 <div id="app" class="hidden">
 
-  <div class="score" id="score">0 نقطة</div>
+<h1>🎯 نظام النقاط</h1>
+<div class="score" id="score">0 نقطة</div>
 
-  <div class="card">
-    <h4>✅ الأعمال</h4>
-    <button class="good" onclick="add(25)">صلاة (+25)</button>
-    <button class="good" onclick="add(60)">دراسة (+60)</button>
-    <button class="good" onclick="add(50)">رياضة (+50)</button>
-    <button class="good" onclick="add(120)" id="readBtn">قراءة كتاب (+120)</button>
-  </div>
+<div class="card" id="positiveCard">
+  <h2>✅ الأنشطة الإيجابية</h2>
+  <button onclick="add(25)">كل صلاة (+25)</button>
+  <button onclick="add(60)">جلسة دراسة (+60)</button>
+  <button onclick="add(50)">رياضة (+50)</button>
+  <button onclick="add(150)">إنجاز 80% (+150)</button>
+  <button onclick="add(40)">دراسة مسائية (+40)</button>
+  <button id="readBtn" onclick="add(25)">قراءة 30 دقيقة (+25)</button>
+  <button onclick="add(20)">مراجعة سريعة (+20)</button>
+  <button onclick="add(15)">ترتيب الغرفة (+15)</button>
+  <button onclick="add(15)">غسل الأواني (+15)</button>
+</div>
 
-  <div class="card">
-    <h4>❌ أخطاء</h4>
-    <button class="bad" onclick="add(-100)">هاتف (-100)</button>
-    <button class="bad" onclick="add(-75)">نوم متأخر (-75)</button>
-  </div>
+<div class="card">
+  <h2>❌ العادات السيئة</h2>
+  <button class="danger" onclick="add(-150)">هاتف أثناء الدراسة (-150)</button>
+  <button class="danger" onclick="add(-100)">تأخير الصلاة (-100)</button>
+  <button class="danger" onclick="add(-100)">راحة طويلة (-100)</button>
+  <button class="danger" onclick="add(-75)">نوم متأخر (-75)</button>
+  <button class="danger" onclick="add(-60)">إهمال الترتيب (-60)</button>
+  <button class="danger" onclick="add(-130)">عادة سيئة (-130)</button>
+  <button class="danger" onclick="add(-70)">مماطلة (-70)</button>
+</div>
 
-  <button class="bad" onclick="logout()">خروج</button>
+<div class="card" id="rewardsCard">
+  <h2>🎁 متجر المكافآت</h2>
+  <button class="reward" onclick="redeem(40)">15 دقيقة هاتف (-40)</button>
+  <button class="reward" onclick="redeem(75)">30 دقيقة هاتف (-75)</button>
+  <button class="reward" onclick="redeem(150)">رحلة قصيرة (-150)</button>
+  <button class="reward" onclick="redeem(200)">وجبة خارجية (-200)</button>
+  <button class="reward" onclick="redeem(300)">مشاهدة فيلم (-300)</button>
+  <button id="readReward" class="reward" onclick="redeem(120)">قراءة كتاب (-120)</button>
+</div>
+
+<!-- زر تسجيل الخروج -->
+<button class="logout" onclick="logout()">تسجيل الخروج</button>
 
 </div>
 
@@ -81,56 +80,75 @@ const firebaseConfig = {
   authDomain: "points-system-fc43e.firebaseapp.com",
   databaseURL: "https://points-system-fc43e-default-rtdb.firebaseio.com/",
   projectId: "points-system-fc43e",
-  storageBucket: "points-system-fc43e.firebasestorage.app",
+  storageBucket: "points-system-fc43e.appspot.com",
   messagingSenderId: "753175770984",
   appId: "1:753175770984:web:6045f321d4a869f19008dd"
+};
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let currentUser = "";
+let score = 0;
 
+// تسجيل الدخول
 function login(){
-  const name = document.getElementById("user").value.trim();
-
+  const name=document.getElementById("username").value.trim();
   if(name!=="محمد الخير" && name!=="محمد عليان"){
     alert("اسم غير مسموح");
     return;
   }
-
-  currentUser = name;
-
-  document.getElementById("login").classList.add("hidden");
+  currentUser=name;
+  document.getElementById("loginCard").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
 
-  if(name==="محمد الخير"){
-    document.getElementById("readBtn").style.display="none";
+  // تخصيص لمحمد عليان
+  if(currentUser==="محمد عليان"){
+    document.getElementById("readReward").style.display="none";
   }
 
   loadScore();
 }
 
-function logout(){
-  location.reload();
-}
-
+// تحميل النقاط
 function loadScore(){
-  db.ref("users/"+currentUser).on("value", snap=>{
-    let val = snap.val();
-    if(val===null){
-      db.ref("users/"+currentUser).set(0);
-      val = 0;
-    }
-    document.getElementById("score").innerText = val+" نقطة";
+  db.ref("users/"+currentUser).on("value",snap=>{
+    score=snap.val()||0;
+    update();
   });
 }
 
-function add(val){
-  db.ref("users/"+currentUser).once("value", snap=>{
-    let current = snap.val() || 0;
-    db.ref("users/"+currentUser).set(current + val);
-  });
+// تحديث العرض
+  function update(){
+  document.getElementById("score").innerText=score+" نقطة";
+}
+
+// إضافة نقاط / خصم
+function add(points){
+  score+=points;
+  db.ref("users/"+currentUser).set(score);
+}
+
+// استبدال مكافآت
+function redeem(cost){
+  if(score>=cost){
+    score-=cost;
+    db.ref("users/"+currentUser).set(score);
+    alert("✅ تم استبدال المكافأة");
+  }else{
+    alert("❌ نقاط غير كافية");
+  }
+}
+
+// تسجيل الخروج
+function logout(){
+  currentUser="";
+  score=0;
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("loginCard").classList.remove("hidden");
+  document.getElementById("username").value="";
+  document.getElementById("score").innerText="0 نقطة";
 }
 </script>
 
