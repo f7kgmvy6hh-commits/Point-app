@@ -1,175 +1,348 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>نظام النقاط الذكي</title>
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>نظام النقاط —</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
-      padding: 20px;
-    }
-    h1 { text-align: center; }
-    .card {
-      background: #1e293b;
-      margin: 15px 0;
-      padding: 15px;
-      border-radius: 12px;
-    }
-    button {
-      background: #22c55e;
-      border: none;
-      color: black;
-      padding: 10px 15px;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      margin: 4px;
-    }
-    .danger { background: #ef4444; }
-    .reward { background: #38bdf8; }
-    .score {
-      font-size: 32px;
-      color: #facc15;
-      text-align: center;
-    }
-    input {
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      margin: 5px 0;
-      width: 100%;
-      font-size: 16px;
-    }
+    :root { --bg:#0f172a; --card:#1e293b; --accent:#22c55e; --danger:#ef4444; --muted:#94a3b8; --gold:#facc15; }
+    body { font-family: Arial, sans-serif; background:var(--bg); color:white; padding:18px; margin:0; min-height:100vh; }
+    header.appbar { position:sticky; top:0; z-index:30; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); padding:10px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.03); }
+    header h1 { margin:0; font-size:18px; }
+    .top-actions { display:flex; gap:8px; }
+    .btn { padding:8px 10px; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+    .btn-joke { background:#38bdf8; color:#000; }
+    .btn-home { background:#86efac; color:#052e16; display:none; }
+    .container { max-width:980px; margin:18px auto; padding:0 12px; box-sizing:border-box; }
+    .card { background:var(--card); margin:12px 0; padding:14px; border-radius:10px; }
+    .score { text-align:center; color:var(--gold); font-size:28px; margin:8px 0; }
+    select,input { padding:10px; border-radius:8px; border:none; font-size:15px; width:100%; box-sizing:border-box; }
+    .actions-row { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+    button.action { background:var(--accent); color:#000; border:none; padding:8px 12px; border-radius:10px; cursor:pointer; }
+    button.danger { background:var(--danger); color:#000; border:none; padding:8px 12px; border-radius:10px; cursor:pointer; }
+    button.reward { background:#38bdf8; color:#000; border:none; padding:8px 12px; border-radius:10px; cursor:pointer; }
+    button[disabled] { opacity:0.5; cursor:not-allowed; }
+    #message { position:fixed; top:14px; left:50%; transform:translateX(-50%); min-width:220px; max-width:92%; padding:10px 14px; border-radius:8px; font-weight:700; color:#000; display:none; z-index:2000; box-shadow:0 6px 18px rgba(0,0,0,0.3); }
+    #message.info { background:#bfdbfe; color:#022c52; }
+    #message.success { background:#86efac; color:#052e16; }
+    #message.warn { background:#fef08a; color:#4a3f00; }
+    #message.error { background:#fecaca; color:#490000; }
+    .meta { text-align:center; color:var(--muted); font-size:13px; margin-top:8px; }
+    #joke { margin-top:12px; font-size:18px; color:#e6edf3; text-align:center; min-height:64px; }
+    @media(max-width:520px){ header h1{font-size:16px;} .actions-row{gap:6px;} }
+    .small { font-size:13px; color:var(--muted); }
+    .controls { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:12px; }
+    input[type=file] { display:none; }
   </style>
 </head>
-
 <body>
+  <div id="message" role="status" aria-live="polite"></div>
 
-<!-- صفحة تسجيل الدخول -->
-<div id="loginPage" class="card">
-  <h2>تسجيل الدخول</h2>
-  <select id="username">
-    <option value="">اختر الاسم</option>
-    <option value="محمد الخير">محمد الخير</option>
-    <option value="محمد عليان">محمد عليان</option>
-  </select>
-  <br><br>
-  <button onclick="login()">تسجيل الدخول</button>
-</div>
+  <header class="appbar">
+    <h1>نظام النقاط — </h1>
+    <div class="top-actions">
+      <button id="toJokesBtn" class="btn btn-joke">مفاجئة</button>
+      <button id="toHomeBtn" class="btn btn-home">الرئيسية</button>
+    </div>
+  </header>
 
-<!-- النظام الأساسي -->
-<div id="mainPage" style="display:none">
+  <main class="container">
+    <!-- Login / Home -->
+    <section id="homeView">
+      <div class="card" id="loginCard">
+        <h2>تسجيل الدخول</h2>
+        <label for="username" style="display:block;margin-bottom:8px;">اختر اسم المستخدم</label>
+        <select id="username" aria-label="اسم المستخدم">
+          <option value="">اختر الاسم</option>
+          <option value="محمد الخير">محمد الخير</option>
+          <option value="محمد عليان">محمد عليان</option>
+        </select>
+        <div style="margin-top:12px; text-align:center;">
+          <button id="loginBtn" class="action" type="button">تسجيل الدخول</button>
+        </div>
+        <p class="meta small">البيانات تحفظ محليًا على هذا الجهاز فقط.</p>
+      </div>
 
-<h1>🎯 نظام النقاط</h1>
-<div style="text-align:center; margin-bottom:10px;">
-  <span id="currentUser"></span>
-  <button onclick="logout()" class="danger">تسجيل الخروج</button>
-</div>
+      <div id="appArea" style="display:none">
+        <div class="card">
+          <div style="text-align:center; margin-bottom:8px;">
+            <span id="currentUser"></span>
+            <button id="logoutBtn" class="danger" type="button">تسجيل الخروج</button>
+          </div>
+          <div id="score" class="score">0 نقطة</div>
+        </div>
 
-<div class="score" id="score">0 نقطة</div>
+        <div class="card">
+          <h3>الأنشطة الإيجابية</h3>
+          <div class="actions-row">
+            <button class="action" data-add="25" type="button">كل صلاة (+25)</button>
+            <button class="action" data-add="60" type="button">جلسة دراسة (+60)</button>
+            <button class="action" data-add="50" type="button">رياضة (+50)</button>
+            <button class="action" data-add="150" type="button">إنجاز 80% (+150)</button>
+            <button class="action" data-add="40" type="button">دراسة مسائية (+40)</button>
+            <button class="action" data-add="25" type="button">قراءة 30 دقيقة (+25)</button>
+            <button class="action" data-add="20" type="button">مراجعة سريعة (+20)</button>
+            <button class="action" data-add="15" type="button">ترتيب الغرفة (+15)</button>
+            <button class="action" data-add="15" type="button">غسل الأواني (+15)</button>
+          </div>
+        </div>
 
-<div class="card">
-  <h2>✅ الأنشطة الإيجابية</h2>
-  <button onclick="add(25)">كل صلاة (+25)</button>
-  <button onclick="add(60)">جلسة دراسة (+60)</button>
-  <button onclick="add(50)">رياضة (+50)</button>
-  <button onclick="add(150)">إنجاز 80% (+150)</button>
-  <button onclick="add(40)">دراسة مسائية (+40)</button>
-  <button onclick="add(25)">قراءة 30 دقيقة (+25)</button>
-  <button onclick="add(20)">مراجعة سريعة (+20)</button>
-  <button onclick="add(15)">ترتيب الغرفة (+15)</button>
-  <button onclick="add(15)">غسل الأواني (+15)</button>
-</div>
+        <div class="card">
+          <h3>العادات السيئة</h3>
+          <div class="actions-row">
+            <button class="danger" data-add="-150" type="button">هاتف أثناء الدراسة (-150)</button>
+            <button class="danger" data-add="-100" type="button">تأخير الصلاة (-100)</button>
+            <button class="danger" data-add="-75" type="button">نوم متأخر (-75)</button>
+            <button class="danger" data-add="-60" type="button">إهمال الترتيب (-60)</button>
+            <button class="danger" data-add="-130" type="button">عادة سيئة (-130)</button>
+            <button class="danger" data-add="-70" type="button">مماطلة (-70)</button>
+          </div>
+        </div>
 
-<div class="card">
-  <h2>❌ العادات السيئة</h2>
-  <button class="danger" onclick="add(-150)">هاتف أثناء الدراسة (-150)</button>
-  <button class="danger" onclick="add(-100)">تأخير الصلاة (-100)</button>
-  <button class="danger" onclick="add(-100)">راحة طويلة (-100)</button>
-  <button class="danger" onclick="add(-75)">نوم متأخر (-75)</button>
-  <button class="danger" onclick="add(-60)">إهمال الترتيب (-60)</button>
-  <button class="danger" onclick="add(-130)">عادة سيئة (-130)</button>
-  <button class="danger" onclick="add(-70)">مماطلة (-70)</button>
-</div>
+        <div class="card">
+          <h3>متجر المكافآت</h3>
+          <div class="actions-row">
+            <button class="reward" data-redeem="40" type="button">15 دقيقة هاتف (-40)</button>
+            <button class="reward" data-redeem="75" type="button">30 دقيقة هاتف (-75)</button>
+            <button class="reward" data-redeem="150" type="button">رحلة قصيرة (-150)</button>
+            <button class="reward" data-redeem="200" type="button">وجبة خارجية (-200)</button>
+            <button class="reward" data-redeem="300" type="button">مشاهدة فيلم (-300)</button>
+            <button class="reward" data-redeem="120" type="button">قراءة كتاب (-120)</button>
+          </div>
+        </div>
 
-<div class="card">
-  <h2>🎁 متجر المكافآت</h2>
-  <button class="reward" onclick="redeem(40)">15 دقيقة هاتف (-40)</button>
-  <button class="reward" onclick="redeem(75)">30 دقيقة هاتف (-75)</button>
-  <button class="reward" onclick="redeem(150)">رحلة قصيرة (-150)</button>
-  <button class="reward" onclick="redeem(200)">وجبة خارجية (-200)</button>
-  <button class="reward" onclick="redeem(300)">مشاهدة فيلم (-300)</button>
-  <button class="reward" onclick="redeem(120)">قراءة كتاب (-120)</button>
-</div>
+        <div class="card" style="text-align:center">
+          <button id="exportBtn" class="action" type="button">تنزيل نسخة احتياطية</button>
+          <label for="importFile" class="action" style="cursor:pointer; display:inline-block; background:#ffd166; color:#000;">استعادة نسخة</label>
+          <input id="importFile" type="file" accept="application/json" />
+        </div>
+      </div>
+    </section>
 
-</div>
+    <!-- Jokes -->
+    <section id="jokesView" style="display:none">
+      <div class="card">
+        <h2>مولد النكات </h2>
+        <div class="controls">
+          <select id="categorySelect" aria-label="اختر فئة النكات" style="max-width:220px;">
+            <option value="any">كل الفئات</option>
+            <option value="programming">البرمجة</option>
+            <option value="misc">متفرقات</option>
+            <option value="pun">تلاعب بالألفاظ</option>
+          </select>
+          <button id="getJokeBtn" class="action" type="button">نكتة عشوائية</button>
+          <button id="copyJokeBtn" class="action" type="button">نسخ النكتة</button>
+        </div>
+        <div id="joke" aria-live="polite">   اضغط للحصول على نكتة  😄</div>
+        <div class="meta" id="jokeMeta"></div> 
+      </div>
+    </section>
+  </main>
 
-<script>
-  let score = 0;
-  let user = "";
-
-  function getKey() {
-    return "score_" + user;
-  }
-
-  function update() {
-    document.getElementById("score").innerText = score + " نقطة";
-    localStorage.setItem(getKey(), score);
-  }
-
-  function add(points) {
-    score += points;
-    update();
-  }
-
-  function redeem(cost) {
-    if (score >= cost) {
-      score -= cost;
-      update();
-      alert("✅ تم استبدال المكافأة");
-    } else {
-      alert("❌ نقاط غير كافية");
+  <script>
+    // Offline-only app (no Firebase)
+    const msgEl = document.getElementById('message');
+    function showMessage(text, type='info', duration=3000){
+      if(!msgEl) return;
+      msgEl.className = '';
+      msgEl.classList.add(type);
+      msgEl.textContent = text;
+      msgEl.style.display = 'block';
+      if(duration>0) setTimeout(()=> msgEl.style.display = 'none', duration);
     }
-  }
 
-  function login() {
-    const selected = document.getElementById("username").value;
-    if (!selected) {
-      alert("اختر اسم المستخدم");
-      return;
+    // Keys
+    const localScoreKey = u => 'score_' + encodeURIComponent(u || '');
+
+    function readLocal(user){ if(!user) return 0; const v = localStorage.getItem(localScoreKey(user)); return v !== null ? Number(v) || 0 : 0; }
+    function writeLocal(user, val){ if(!user) return; localStorage.setItem(localScoreKey(user), String(Number(val||0))); }
+
+    // UI elements
+    const toJokesBtn = document.getElementById('toJokesBtn');
+    const toHomeBtn = document.getElementById('toHomeBtn');
+    const homeView = document.getElementById('homeView');
+    const jokesView = document.getElementById('jokesView');
+    const usernameSelect = document.getElementById('username');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const appArea = document.getElementById('appArea');
+    const currentUserSpan = document.getElementById('currentUser');
+    const scoreEl = document.getElementById('score');
+    const exportBtn = document.getElementById('exportBtn');
+    const importFile = document.getElementById('importFile');
+
+    // Jokes dataset (offline)
+    const JOKES = [
+      { category:'programming', type:'single', joke:'لماذا يكره المبرمجون الطبيعة؟ لأنها تحتوي على الكثير من الأخطاء.' },
+      { category:'programming', type:'single', joke:'كيف تسأل مطوّر عن الوقت؟ اطلب منه commit بدلاً من الساعة.' },
+      { category:'misc', type:'single', joke:'لماذا وضع الطالب ساعته في الثلاجة؟ لأنه أراد وقتًا أكثر باردًا.' },
+      { category:'pun', type:'twopart', setup:'لماذا لا يشارك الهيكل العظمي أسراره؟', delivery:'لأنه لا يملك قلبًا ليضع ثقته.' },
+      { category:'misc', type:'single', joke:'سأل المعلم الطالب: لماذا تأخرت؟ قال: المدرسة كانت مغلقة للتمارين.' },
+      { category:'programming', type:'twopart', setup:'ما الفرق بين مطوّر وكسارة البندق؟', delivery:'الكسارة تعطيك حلًا بسرعة.' },
+      { category:'pun', type:'single', joke:'قررت أن أصبح موسيقيًا… لكن لم أجد نغمة البداية.' },
+      { category:'misc', type:'single', joke:'الأب لابنه: إذا نجحت سأعطيك سيارة. الابن: وماذا لو لم أنجح؟ الأب: سأعطيك نصيحة.' },
+      { category:'programming', type:'single', joke:'تعلمت البرمجة من الصفر — ثم وصلني خطأ الـNullPointer.' },
+      { category:'pun', type:'twopart', setup:'لقد اشتريت كتابًا عن التسويق الذاتي.', delivery:'لكنني وجدت الصفحة فارغة — لأنك أنت المنتج.' }
+    ];
+
+    // Helper: random joke by category
+    function getRandomJoke(category='any'){
+      const list = JOKES.filter(j => category==='any' || j.category===category);
+      if(list.length===0) return null;
+      return list[Math.floor(Math.random()*list.length)];
     }
-    user = selected;
-    localStorage.setItem("currentUser", user);
 
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainPage").style.display = "block";
-    document.getElementById("currentUser").innerText = "المستخدم: " + user;
+    // Navigation
+    toJokesBtn.addEventListener('click', ()=> {
+      homeView.style.display = 'none';
+      jokesView.style.display = 'block';
+      toJokesBtn.style.display = 'none';
+      toHomeBtn.style.display = 'inline-block';
+    });
+    toHomeBtn.addEventListener('click', ()=> {
+      jokesView.style.display = 'none';
+      homeView.style.display = 'block';
+      toJokesBtn.style.display = 'inline-block';
+      toHomeBtn.style.display = 'none';
+    });
 
-    score = parseInt(localStorage.getItem(getKey())) || 0;
-    update();
-  }
-
-  function logout() {
-    localStorage.removeItem("currentUser");
-    location.reload();
-  }
-
-  window.onload = function() {
-    const savedUser = localStorage.getItem("currentUser");
-    if (savedUser) {
-      user = savedUser;
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("mainPage").style.display = "block";
-      document.getElementById("currentUser").innerText = "المستخدم: " + user;
-
-      score = parseInt(localStorage.getItem(getKey())) || 0;
-      update();
+    // Login/logout
+    let currentUser = null;
+    function setLoggedIn(user){
+      currentUser = user;
+      currentUserSpan.textContent = 'المستخدم: ' + user;
+      appArea.style.display = 'block';
+      document.getElementById('loginCard').style.display = 'none';
+      // load score from local
+      const s = readLocal(user) || 0;
+      scoreEl.textContent = s + ' نقطة';
+      showMessage('تم تسجيل الدخول محليًا', 'success', 1200);
     }
-  }
-</script>
+    function setLoggedOut(){
+      currentUser = null;
+      currentUserSpan.textContent = '';
+      appArea.style.display = 'none';
+      document.getElementById('loginCard').style.display = 'block';
+      scoreEl.textContent = '0 نقطة';
+      showMessage('تم تسجيل الخروج', 'info', 1000);
+    }
 
+    loginBtn.addEventListener('click', ()=>{
+      const val = usernameSelect.value;
+      if(!val){ showMessage('اختر اسم المستخدم أولاً','warn'); return; }
+      setLoggedIn(val);
+      localStorage.setItem('currentUser', val);
+    });
+    logoutBtn.addEventListener('click', ()=>{
+      localStorage.removeItem('currentUser');
+      setLoggedOut();
+    });
+
+    // Actions
+    function applyDelta(user, delta){
+      if(!user) { showMessage('الرجاء تسجيل الدخول أولاً','warn'); return; }
+      const cur = readLocal(user) || 0;
+      const next = cur + Number(delta);
+      writeLocal(user, next);
+      scoreEl.textContent = next + ' نقطة';
+      showMessage('تم تطبيق العملية محليًا', 'success', 1000);
+    }
+    // wire action buttons
+    document.querySelectorAll('button[data-add]').forEach(b => b.addEventListener('click', ()=> applyDelta(currentUser, Number(b.dataset.add))));
+    document.querySelectorAll('button[data-redeem]').forEach(b => b.addEventListener('click', ()=> applyDelta(currentUser, -Number(b.dataset.redeem))));
+
+    // Backup (download all scores)
+    exportBtn.addEventListener('click', () => {
+      const out = {};
+      for(let i=0;i<localStorage.length;i++){
+        const key = localStorage.key(i);
+        if(key && key.startsWith('score_')){
+          out[key] = localStorage.getItem(key);
+        }
+      }
+      const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'points-backup.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showMessage('تم تنزيل النسخة الاحتياطية', 'success', 1400);
+    });
+
+    // Import/restore
+    importFile.addEventListener('change', (e) => {
+      const f = e.target.files && e.target.files[0];
+      if(!f) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          let count = 0;
+          for(const k in data){
+            if(k.startsWith('score_')){
+              localStorage.setItem(k, String(data[k]));
+              count++;
+            }
+          }
+          showMessage(`تم استعادة ${count} مدخلاً محليًا`, 'success', 1800);
+          // if current user affected update UI
+          if(currentUser) {
+            scoreEl.textContent = (readLocal(currentUser)||0) + ' نقطة';
+          }
+        } catch(err){
+          console.error('import error', err);
+          showMessage('فشل استعادة النسخة — الملف غير صالح', 'error', 2200);
+        }
+      };
+      reader.readAsText(f);
+      // clear input
+      e.target.value = '';
+    });
+
+    // Jokes functionality (offline)
+    const getJokeBtn = document.getElementById('getJokeBtn');
+    const copyJokeBtn = document.getElementById('copyJokeBtn');
+    const jokeDiv = document.getElementById('joke');
+    const jokeMeta = document.getElementById('jokeMeta');
+    const categorySelect = document.getElementById('categorySelect');
+
+    getJokeBtn.addEventListener('click', ()=> {
+      const cat = categorySelect.value || 'any';
+      const map = { any:'any', programming:'programming', misc:'misc', pun:'pun' };
+      const jk = getRandomJoke(cat);
+      if(!jk){ jokeDiv.textContent = 'لا توجد نكات للفئة المختارة.'; jokeMeta.textContent = ''; return; }
+      if(jk.type === 'single'){ jokeDiv.innerHTML = `<div class="setup">${jk.joke}</div><div class="delivery"></div>`; }
+      else { jokeDiv.innerHTML = `<div class="setup">${jk.setup}</div><div class="delivery">${jk.delivery}</div>`; }
+      jokeMeta.textContent = `فئة: ${jk.category || 'عام'}`;
+    });
+
+    copyJokeBtn.addEventListener('click', async ()=>{
+      try {
+        const text = jokeDiv.textContent || '';
+        if(!text.trim()){ showMessage('لا توجد نكتة لنسخها', 'warn'); return; }
+        await navigator.clipboard.writeText(text);
+        showMessage('تم نسخ النكتة', 'success', 1200);
+      } catch(err){
+        console.error('copy failed', err);
+        showMessage('فشل النسخ — قد لا يدعم المتصفح ذلك', 'error', 1600);
+      }
+    });
+
+    function getRandomJoke(category='any'){
+      const list = JOKES.filter(j => category==='any' || j.category===category);
+      if(list.length === 0) return null;
+      return list[Math.floor(Math.random()*list.length)];
+    }
+
+    // restore session if any
+    const saved = localStorage.getItem('currentUser');
+    if(saved){
+      usernameSelect.value = saved;
+      setTimeout(()=> { loginBtn.click(); }, 200);
+    }
+  </script>
 </body>
 </html>
