@@ -1,33 +1,74 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>نظام النقاط</title>
+  <meta charset="UTF-8">
+  <title>نظام النقاط الذكي</title>
 
-<style>
-body{font-family:Arial;background:#0f172a;color:#fff;padding:20px}
-.card{background:#1e293b;margin:15px 0;padding:15px;border-radius:12px}
-button{background:#22c55e;border:none;color:black;padding:10px 15px;border-radius:10px;font-size:16px;cursor:pointer;margin:4px}
-.danger{background:#ef4444}
-.reward{background:#38bdf8}
-.logout{background:#ef4444;color:black;margin-top:10px}
-.score{font-size:32px;color:#facc15;text-align:center}
-.hidden{display:none}
-input{width:100%;padding:10px;border-radius:10px;border:none;margin:10px 0}
-</style>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+    h1 { text-align: center; }
+    .card {
+      background: #1e293b;
+      margin: 15px 0;
+      padding: 15px;
+      border-radius: 12px;
+    }
+    button {
+      background: #22c55e;
+      border: none;
+      color: black;
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 4px;
+    }
+    .danger { background: #ef4444; }
+    .reward { background: #38bdf8; }
+    .score {
+      font-size: 32px;
+      color: #facc15;
+      text-align: center;
+    }
+    input {
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin: 5px 0;
+      width: 100%;
+      font-size: 16px;
+    }
+  </style>
+</head>
 
 <body>
 
-<!-- تسجيل الدخول -->
-<div id="loginCard" class="card">
-  <h2>🔐 تسجيل الدخول</h2>
-  <input id="username" placeholder="محمد الخير أو محمد عليان">
-  <button onclick="login()">دخول</button>
+<!-- صفحة تسجيل الدخول -->
+<div id="loginPage" class="card">
+  <h2>تسجيل الدخول</h2>
+  <select id="username">
+    <option value="">اختر الاسم</option>
+    <option value="محمد الخير">محمد الخير</option>
+    <option value="محمد عليان">محمد عليان</option>
+  </select>
+  <br><br>
+  <button onclick="login()">تسجيل الدخول</button>
 </div>
 
-<!-- التطبيق -->
-<div id="app" class="hidden">
+<!-- النظام الأساسي -->
+<div id="mainPage" style="display:none">
+
 <h1>🎯 نظام النقاط</h1>
+<div style="text-align:center; margin-bottom:10px;">
+  <span id="currentUser"></span>
+  <button onclick="logout()" class="danger">تسجيل الخروج</button>
+</div>
+
 <div class="score" id="score">0 نقطة</div>
 
 <div class="card">
@@ -37,7 +78,7 @@ input{width:100%;padding:10px;border-radius:10px;border:none;margin:10px 0}
   <button onclick="add(50)">رياضة (+50)</button>
   <button onclick="add(150)">إنجاز 80% (+150)</button>
   <button onclick="add(40)">دراسة مسائية (+40)</button>
-  <button id="readBtn" onclick="add(25)">قراءة 30 دقيقة (+25)</button>
+  <button onclick="add(25)">قراءة 30 دقيقة (+25)</button>
   <button onclick="add(20)">مراجعة سريعة (+20)</button>
   <button onclick="add(15)">ترتيب الغرفة (+15)</button>
   <button onclick="add(15)">غسل الأواني (+15)</button>
@@ -54,86 +95,81 @@ input{width:100%;padding:10px;border-radius:10px;border:none;margin:10px 0}
   <button class="danger" onclick="add(-70)">مماطلة (-70)</button>
 </div>
 
-<div class="card" id="rewardsCard">
+<div class="card">
   <h2>🎁 متجر المكافآت</h2>
   <button class="reward" onclick="redeem(40)">15 دقيقة هاتف (-40)</button>
   <button class="reward" onclick="redeem(75)">30 دقيقة هاتف (-75)</button>
   <button class="reward" onclick="redeem(150)">رحلة قصيرة (-150)</button>
   <button class="reward" onclick="redeem(200)">وجبة خارجية (-200)</button>
   <button class="reward" onclick="redeem(300)">مشاهدة فيلم (-300)</button>
-  <button id="readReward" class="reward" onclick="redeem(120)">قراءة كتاب (-120)</button>
+  <button class="reward" onclick="redeem(120)">قراءة كتاب (-120)</button>
 </div>
 
-<button class="logout" onclick="logout()">تسجيل الخروج</button>
 </div>
 
 <script>
-let currentUser = "";
-let score = 0;
+  let score = 0;
+  let user = "";
 
-// تسجيل الدخول
-function login(){
-  const name=document.getElementById("username").value.trim();
-  if(name!=="محمد الخير" && name!=="محمد عليان"){
-    alert("اسم غير مسموح");
-    return;
+  function getKey() {
+    return "score_" + user;
   }
 
-  currentUser=name;
-  document.getElementById("loginCard").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
-
-  // تخصيص محمد عليان
-  if(currentUser==="محمد عليان"){
-    document.getElementById("readReward").style.display="none";
-  }else{
-    document.getElementById("readReward").style.display="inline-block";
+  function update() {
+    document.getElementById("score").innerText = score + " نقطة";
+    localStorage.setItem(getKey(), score);
   }
 
-  loadScore();
-}
-
-// تحميل النقاط للمستخدم الحالي
-function loadScore(){
-  const saved = localStorage.getItem("score_"+currentUser);
-  score = saved ? parseInt(saved) : 0;
-  update();
-}
-
-// تحديث العرض والحفظ
-function update(){
-  document.getElementById("score").innerText=score+" نقطة";
-  localStorage.setItem("score_"+currentUser, score);
-}
-
-// إضافة أو خصم
-function add(points){
-  score+=points;
-  update();
-}
-
-// استبدال مكافآت
-function redeem(cost){
-  if(score>=cost){
-    score-=cost;
+  function add(points) {
+    score += points;
     update();
-    alert("✅ تم استبدال المكافأة");
-  }else{
-    alert("❌ نقاط غير كافية");
   }
-}
 
-// تسجيل الخروج
-function logout(){
-  currentUser="";
-  score=0;
-  document.getElementById("app").classList.add("hidden");
-  document.getElementById("loginCard").classList.remove("hidden");
-  document.getElementById("username").value="";
-  document.getElementById("score").innerText="0 نقطة";
-}
+  function redeem(cost) {
+    if (score >= cost) {
+      score -= cost;
+      update();
+      alert("✅ تم استبدال المكافأة");
+    } else {
+      alert("❌ نقاط غير كافية");
+    }
+  }
+
+  function login() {
+    const selected = document.getElementById("username").value;
+    if (!selected) {
+      alert("اختر اسم المستخدم");
+      return;
+    }
+    user = selected;
+    localStorage.setItem("currentUser", user);
+
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainPage").style.display = "block";
+    document.getElementById("currentUser").innerText = "المستخدم: " + user;
+
+    score = parseInt(localStorage.getItem(getKey())) || 0;
+    update();
+  }
+
+  function logout() {
+    localStorage.removeItem("currentUser");
+    location.reload();
+  }
+
+  window.onload = function() {
+    const savedUser = localStorage.getItem("currentUser");
+    if (savedUser) {
+      user = savedUser;
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("mainPage").style.display = "block";
+      document.getElementById("currentUser").innerText = "المستخدم: " + user;
+
+      score = parseInt(localStorage.getItem(getKey())) || 0;
+      update();
+    }
+  }
 </script>
 
 </body>
 </html>
-    
