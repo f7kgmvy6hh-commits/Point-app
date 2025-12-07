@@ -16,13 +16,9 @@ button{background:#22c55e;border:none;color:black;padding:10px 15px;border-radiu
 input{width:100%;padding:10px;border-radius:10px;border:none;margin:10px 0}
 </style>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-</head>
-
 <body>
 
-<!-- صفحة تسجيل الدخول -->
+<!-- تسجيل الدخول -->
 <div id="loginCard" class="card">
   <h2>🔐 تسجيل الدخول</h2>
   <input id="username" placeholder="محمد الخير أو محمد عليان">
@@ -31,11 +27,10 @@ input{width:100%;padding:10px;border-radius:10px;border:none;margin:10px 0}
 
 <!-- التطبيق -->
 <div id="app" class="hidden">
-
 <h1>🎯 نظام النقاط</h1>
 <div class="score" id="score">0 نقطة</div>
 
-<div class="card" id="positiveCard">
+<div class="card">
   <h2>✅ الأنشطة الإيجابية</h2>
   <button onclick="add(25)">كل صلاة (+25)</button>
   <button onclick="add(60)">جلسة دراسة (+60)</button>
@@ -69,26 +64,10 @@ input{width:100%;padding:10px;border-radius:10px;border:none;margin:10px 0}
   <button id="readReward" class="reward" onclick="redeem(120)">قراءة كتاب (-120)</button>
 </div>
 
-<!-- زر تسجيل الخروج -->
 <button class="logout" onclick="logout()">تسجيل الخروج</button>
-
 </div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyB8VgV7TLZv5nYS7GQE1Z-oUg87BAnfrqk",
-  authDomain: "points-system-fc43e.firebaseapp.com",
-  databaseURL: "https://points-system-fc43e-default-rtdb.firebaseio.com/",
-  projectId: "points-system-fc43e",
-  storageBucket: "points-system-fc43e.appspot.com",
-  messagingSenderId: "753175770984",
-  appId: "1:753175770984:web:6045f321d4a869f19008dd"
-};
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
 let currentUser = "";
 let score = 0;
 
@@ -99,42 +78,45 @@ function login(){
     alert("اسم غير مسموح");
     return;
   }
+
   currentUser=name;
   document.getElementById("loginCard").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
 
-  // تخصيص لمحمد عليان
+  // تخصيص محمد عليان
   if(currentUser==="محمد عليان"){
     document.getElementById("readReward").style.display="none";
+  }else{
+    document.getElementById("readReward").style.display="inline-block";
   }
 
   loadScore();
 }
 
-// تحميل النقاط
+// تحميل النقاط للمستخدم الحالي
 function loadScore(){
-  db.ref("users/"+currentUser).on("value",snap=>{
-    score=snap.val()||0;
-    update();
-  });
+  const saved = localStorage.getItem("score_"+currentUser);
+  score = saved ? parseInt(saved) : 0;
+  update();
 }
 
-// تحديث العرض
-  function update(){
+// تحديث العرض والحفظ
+function update(){
   document.getElementById("score").innerText=score+" نقطة";
+  localStorage.setItem("score_"+currentUser, score);
 }
 
-// إضافة نقاط / خصم
+// إضافة أو خصم
 function add(points){
   score+=points;
-  db.ref("users/"+currentUser).set(score);
+  update();
 }
 
 // استبدال مكافآت
 function redeem(cost){
   if(score>=cost){
     score-=cost;
-    db.ref("users/"+currentUser).set(score);
+    update();
     alert("✅ تم استبدال المكافأة");
   }else{
     alert("❌ نقاط غير كافية");
@@ -154,3 +136,4 @@ function logout(){
 
 </body>
 </html>
+    
